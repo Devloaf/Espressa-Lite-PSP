@@ -5,15 +5,15 @@
 Espressa Lite is an app for those who wants to draw something on PlayStationPortable (PSP) or wants to edit some lightweight stuff on a go!
 
 ## Controls
-Menu:
-  [X] Starts editing
-Editing:
-  [D-Pad] Move Cursor
-  [Left/Right] Switch Color
-  [L] Draw White (Eraser)
-  [R] Draw Selected Color
-  [Select] Save Canvas
-  [Start] Go to Menu
+### Menu:
+  * [Cross] Starts editing
+### Editing:
+  * [D-Pad] Move Cursor
+  * [Left/Right] Switch Color
+  * [L] Draw White (Eraser)
+  * [R] Draw Selected Color
+  * [Select] Save Canvas
+  * [Start] Go to Menu
 
 ## How to use it?
 Simple! You just have to download the latest release, unpack the app folder (that contains **EBOOT.PBP** in it!) into *X:/PSP/GAME* and you're ready to run it on your PSP from XMB menu.
