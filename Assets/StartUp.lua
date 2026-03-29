@@ -1,13 +1,14 @@
 --[[
 
-	StartUp File for Espressa Lite PSP 0.1
+	StartUp File for Espressa Lite PSP a0.2
 	----------------------------------
 	Starts everything to set up the enviroment and etc.
 	
 	Create Date: 2020.06.07
-	Last Edit: 2026.03.22
+	Last Edit: 2026.03.30
 
 --]]
+
 
 
 
@@ -25,9 +26,6 @@ if indev then
 	BuildCFG:write(CONST.Build)
 	BuildCFG:close()
 end
-
--- https://forums.ps2dev.org/viewtopic.php?f=21&t=5386
--- There used to be a write of the Date and Time to DATE.TXT somewhere
 
 -- Configs
 dofile("Data/Config.cfg")

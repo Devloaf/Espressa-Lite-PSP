@@ -1,18 +1,25 @@
 --[[
 
-	Function File for Espressa Lite PSP 0.1
+	Function File for Espressa Lite PSP a0.2
 	----------------------------------
 	Loads useful functions and global variables
 	
 	Create Date: 2024.02.20
-	Last Edit: 2026.03.22
+	Last Edit: 2026.03.30
 
 --]]
 
 CONST = {
 	AppName = "Espressa Lite for PSP",
-	Version = "0.1", State = "Alpha", Build = nil,
-	Date = "2026.03.22",
+	Version = "0.2", State = "Alpha", Build = nil,
+	Date = {
+		Year = 2026,
+		Month = 3,
+		Day = 30,
+		FULL = nil, -- for YYYY.MM.DD
+        FULLPLAIN = nil -- for YYYYMMDD
+	},
+    CurDateFULLPLAIN = "20260330", -- for using in taking saves (you're free to modify this value the way you want but i know you won't because it's too much effort)
 	Author = "c4thead",
 	
 	ScreenshotsDir = "Screenshots",
@@ -31,18 +38,115 @@ CONST = {
 	
 }
 
-
-
--- Default Colors Pack
-Col = {
-	Black = Color.new(0	,0	,0),
-	White = Color.new(255	,255	,255),
-	
-	Red = Color.new(255	,0	,0),
-	Green = Color.new(0	,255	,0),
-	Blue = Color.new(0	,0	,255),
-	Yellow = Color.new(255	,255	,0)
+SYSTEM = {
+    SCREEN_WIDTH = 480,
+    SCREEN_HEIGHT = 272
 }
+
+-- baking the YYYY.MM.DD into Date.FULL
+CONST.Date.FULL = CONST.Date.Year
+if CONST.Date.Month < 10 then CONST.Date.FULL = CONST.Date.FULL..".".."0"..CONST.Date.Month else CONST.Date.FULL = CONST.Date.FULL.."."..CONST.Date.Month end
+if CONST.Date.Day < 10 then CONST.Date.FULL = CONST.Date.FULL..".".."0"..CONST.Date.Day else CONST.Date.FULL = CONST.Date.FULL.."."..CONST.Date.Day end
+
+CONST.Date.FULLPLAIN = CONST.Date.Year
+if CONST.Date.Month < 10 then CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN.."0"..CONST.Date.Month else CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN..CONST.Date.Month end
+if CONST.Date.Day < 10 then CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN.."0"..CONST.Date.Day else CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN..CONST.Date.Day end
+
+
+
+-- totally not generated through ChatGPT 5 because i am a shit of a programmer but hey it works
+function StartAnimation(obj, anim, dur, destX, destY, startAlpha, endAlpha)
+    local STEPS = 50
+
+    if dur / STEPS < 5 then
+        STEPS = math.floor(dur / 5)
+        if STEPS < 1 then STEPS = 1 end
+    end
+
+    if startAlpha == nil then
+        if anim == "Fade In" then startAlpha = 0
+        else startAlpha = obj.alpha or 255 end
+    end
+
+    if endAlpha == nil then
+        if anim == "Fade Out" then endAlpha = 0
+        else endAlpha = startAlpha end
+    end
+
+    obj.animData = {
+        timer = Timer.new(),
+        step = 0,
+        steps = STEPS,
+
+        startX = obj.X,
+        startY = obj.Y,
+        destX = destX,
+        destY = destY,
+
+        startAlpha = startAlpha,
+        endAlpha = endAlpha,
+
+        lastProgress = 0,
+        type = anim,
+        duration = dur
+    }
+end
+
+function UpdateAnimation(obj)
+    if obj.animData == nil then return false end
+
+    local data = obj.animData
+    local time = data.timer:time()
+
+    for i = data.step + 1, data.steps do
+        if time >= (data.duration / data.steps) * i then
+            data.step = i
+
+            local progress = i / data.steps
+
+            -- Easing
+            if data.type == "Ease In" then
+                progress = progress * progress
+
+            elseif data.type == "Ease Out" then
+                progress = 1 - (1 - progress) * (1 - progress)
+
+            elseif data.type == "Ease In-Out" or data.type == "Fade In" or data.type == "Fade Out" then
+                progress = progress * progress * (3 - 2 * progress)
+            end
+
+            local delta = progress - data.lastProgress
+            data.lastProgress = progress
+
+            obj.X = obj.X + (data.destX - data.startX) * delta
+            obj.Y = obj.Y + (data.destY - data.startY) * delta
+            obj.alpha = (obj.alpha or data.startAlpha) + (data.endAlpha - data.startAlpha) * delta
+        end
+    end
+
+    -- Finish
+    if data.step >= data.steps then
+        obj.X = data.destX
+        obj.Y = data.destY
+        obj.alpha = data.endAlpha
+
+        data.timer:stop()
+        data.timer:reset()
+        obj.animData = nil
+
+        return true
+    end
+
+    return false
+end
+
+-- combined doesn't work the way i need, maybe i'll get rid of it later
+function Animate(obj, anim, dur, destX, destY, startAlpha, endAlpha)
+    if obj.animData == nil then
+        StartAnimation(obj, anim, dur, destX, destY, startAlpha, endAlpha)
+    end
+    return UpdateAnimation(obj)
+end
 
 function getTimeStr_HH_MM_SS()
 	time = os.time()
@@ -66,10 +170,10 @@ function getDateStr_YYYY_MM_DD()
     Day = os.date("%d", time)
 	return string.format("%04d%02d%02d", Year, Month, Day)
 end
--- That ^ didn't get me anywhere unfortunately, waiting for the engine dev to respond to my issue on github :pray:
+-- That ^ didn't get me anywhere unfortunately, still waiting for the engine dev to respond to my issue on github :pray:
 
 
--- Again, thx to Ex, this is what i wouldn't come to without his help:
+-- Thanks to Ex for this "pressed" button state
 bool = nil
 padOld = {}
 

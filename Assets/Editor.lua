@@ -1,12 +1,12 @@
 --[[
 
-	Editor File for Espressa Lite PSP 0.1
+	Editor File for Espressa Lite PSP a0.2
 	----------------------------------
 	Connects up every class and activates them.
 	Main Script, provides drawing state.
 	
 	Create Date: 2020.06.07
-	Last Edit: 2026.03.22
+	Last Edit: 2026.03.30
 
 --]]
 
@@ -16,27 +16,8 @@ exit = false
 ------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------
 
--- will be a class later...
-Cursor = {
-	img = nil,
-	X = nil,
-	Y = nil,
-	Hotspot = {
-		X = 0,
-		Y = 0
-	},
-	Color = {
-		Main = Color.new(0, 0, 0),
-		R = 0,
-		G = 0,
-		B = 0
-	},
-	W = nil,
-	H = nil,
-	SPD = 48
-}
+dofile("Classes/CursorClass.lua")
 
--- don't shame me for this please, it is the first version, i'll clean up the mess i promise
 function CurSetColor(cur, sel)
 	if sel == 1 then
 		cur.Color.R = 255
@@ -82,10 +63,10 @@ function CurSetColor(cur, sel)
 		cur.Color.R = 240
 		cur.Color.G = 200
 		cur.Color.B = 185
-	elseif sel == 12 then -- rgb(45, 20, 75)
-		cur.Color.R = 45
+	elseif sel == 12 then -- rgb(20, 20, 60)
+		cur.Color.R = 20
 		cur.Color.G = 20
-		cur.Color.B = 75
+		cur.Color.B = 60
 	elseif sel == 13 then -- rgb(0, 0, 0)
 		cur.Color.R = 0
 		cur.Color.G = 0
@@ -102,117 +83,159 @@ function CurSetColor(cur, sel)
 	cur.Color.Main = Color.new(cur.Color.R, cur.Color.G, cur.Color.B)
 end
 
-Cursor.img = Image.load("Resources/ToolPack/"..Config.ToolPack.."/Pencil.png")
-Cursor.X = 220
-Cursor.Y = 150
-Cursor.W = Cursor.img:width()
-Cursor.H = Cursor.img:height()
-Cursor.Hotspot.X = Cursor.Hotspot.X - Cursor.W / 2
-Cursor.Hotspot.Y = Cursor.Hotspot.Y - Cursor.H / 2
+Me = {
+	Cursor = Cursor:new() -- first class implementation, wow!
+}
+Me.Cursor:SetDefault()
 
--- only one brush type? are you serious??!?!???!
-function Draw(cur, color)
-	Canvas:drawLine(cur.X + 1 + cur.Hotspot.X, cur.Y + 6 + cur.Hotspot.Y, cur.X + 1 + cur.Hotspot.X, cur.Y + 8 + cur.Hotspot.Y, color)
-	Canvas:drawLine(cur.X + 2 + cur.Hotspot.X, cur.Y + 4 + cur.Hotspot.Y, cur.X + 2 + cur.Hotspot.X, cur.Y + 10 + cur.Hotspot.Y, color)
-	Canvas:drawLine(cur.X + 3 + cur.Hotspot.X, cur.Y + 3 + cur.Hotspot.Y, cur.X + 3 + cur.Hotspot.X, cur.Y + 11 + cur.Hotspot.Y, color)
-	
-	Canvas:fillRect(cur.X + 4 + cur.Hotspot.X, cur.Y + 2 + cur.Hotspot.Y, 2, 11, color)
-	Canvas:fillRect(cur.X + 6 + cur.Hotspot.X, cur.Y + 1 + cur.Hotspot.Y, 3, 13, color)
-	Canvas:fillRect(cur.X + 9 + cur.Hotspot.X, cur.Y + 2 + cur.Hotspot.Y, 2, 11, color)
-	
-	Canvas:drawLine(cur.X + 11 + cur.Hotspot.X, cur.Y + 3 + cur.Hotspot.Y, cur.X + 11 + cur.Hotspot.X, cur.Y + 11 + cur.Hotspot.Y, color)
-	Canvas:drawLine(cur.X + 12 + cur.Hotspot.X, cur.Y + 4 + cur.Hotspot.Y, cur.X + 12 + cur.Hotspot.X, cur.Y + 10 + cur.Hotspot.Y, color)
-	Canvas:drawLine(cur.X + 13 + cur.Hotspot.X, cur.Y + 6 + cur.Hotspot.Y, cur.X + 13 + cur.Hotspot.X, cur.Y + 8 + cur.Hotspot.Y, color)
-end
-
-Canvas = Image.createEmpty(480, 272)
-Canvas:fillRect(0, 0, 480, 272, Color.new(255, 255, 255))
+Canvas = Image.createEmpty(SYSTEM.SCREEN_WIDTH, SYSTEM.SCREEN_HEIGHT)
+Canvas:fillRect(0, 0, SYSTEM.SCREEN_WIDTH, SYSTEM.SCREEN_HEIGHT, Color.new(255, 255, 255))
 
 colselect = 1
-CurSetColor(Cursor, colselect)
+CurSetColor(Me.Cursor, colselect)
 
-ColorPalette = Image.createEmpty(25, 25)
-ColorPalette:fillRect(0, 0, 25, 25, Cursor.Color.Main)
-ColorPaletteTimer = Timer.new()
+ColPal = {
+	Pal = Image.createEmpty(25, 25),
+	X = 440,
+	Y = 232,
+	Pos = "Right-Down", -- "Right-Down", "Left-Down", "Right-Up", "Left-Up"
+	ColBox = 60, -- 60 pixels of cursor collide area
+	PosXY = {
+		RightDownX1 = SYSTEM.SCREEN_WIDTH-25-15,
+		RightDownY1 = SYSTEM.SCREEN_HEIGHT-25-15,
+		RightDownX2 = SYSTEM.SCREEN_WIDTH+5,
+		RightDownY2 = 232,
+
+		LeftDownX1 = 0+15,
+		LeftDownY1 = SYSTEM.SCREEN_HEIGHT-25-15,
+		LeftDownX2 = 0-15-25,
+		LeftDownY2 = SYSTEM.SCREEN_HEIGHT-25-15,
+
+		RightUpX1 = 0,
+		RightUpY1 = 0,
+		RightUpX2 = 0,
+		RightUpY2 = 0,
+
+		LeftUpX1 = 0,
+		LeftUpY1 = 0,
+		LeftUpX2 = 0,
+		LeftUpY2 = 0,
+	},
+	X1 = SYSTEM.SCREEN_WIDTH-25-15, -- Show X Position of the Palette (440)
+	Y1 = SYSTEM.SCREEN_HEIGHT-25-15, -- Show Y Position of the Palette (232)
+	X2 = SYSTEM.SCREEN_WIDTH+5, -- Hidden X Position of the Palette
+	Y2 = 232, -- Hidden Y Position of the Palette
+	Timer = Timer.new()
+}
+ColPal.Pal:fillRect(0, 0, 25, 25, Me.Cursor.Color.Main)
+
+ColPalPan = Image.createEmpty(33, 33)
+ColPalPan:fillRect(0, 0, 33, 33, Color.new(90, 90, 90))
+ColPalPan:DrawAlpha(ColPal.X, ColPal.Y, Color.new(90, 90, 90), Color.new(255, 255, 255)) -- idk tf it does but it does something but i don't think it does what i need it to do so i dunnu :(
+
+ColPalCheckCol = function(cur, cpal)
+	if cpal.Pos == "Right-Down" then
+		if cur.X > SYSTEM.SCREEN_WIDTH - cpal.ColBox and cur.Y > SYSTEM.SCREEN_HEIGHT - cpal.ColBox then
+			cpal.Pos = "Left-Down"
+			cpal.X1 = cpal.PosXY.LeftDownX1
+			cpal.Y1 = cpal.PosXY.LeftDownY1
+			cpal.X2 = cpal.PosXY.LeftDownX2
+			cpal.Y2 = cpal.PosXY.LeftDownY2
+			cpal.X = cpal.X1
+			cpal.Y = cpal.Y1
+			if cpal.animData ~= nil then cpal.animData.destX = cpal.X2 end
+			if cpal.animData ~= nil then cpal.animData.destY = cpal.Y2 end
+		end
+	elseif cpal.Pos == "Left-Down" then
+        if cur.X < 0 + cpal.ColBox and cur.Y > SYSTEM.SCREEN_HEIGHT - cpal.ColBox then
+			cpal.Pos = "Right-Down"
+			cpal.X1 = cpal.PosXY.RightDownX1
+			cpal.Y1 = cpal.PosXY.RightDownY1
+			cpal.X2 = cpal.PosXY.RightDownX2
+			cpal.Y2 = cpal.PosXY.RightDownY2
+			cpal.X = cpal.X1
+			cpal.Y = cpal.Y1
+			if cpal.animData ~= nil then cpal.animData.destX = cpal.X2 end
+			if cpal.animData ~= nil then cpal.animData.destY = cpal.Y2 end
+		end
+	end
+	
+end
+
+DEBUG = false
+FPS = 0
+Tick = 0
+FPSTimer = Timer.new()
+FPSTimer:start()
 
 while true do
 	checkPad()
 
+	if FPSTimer:time() >= 1000 then
+		FPSTimer:reset()
+		FPS = Tick
+		Tick = 0
+	end
+	Tick = Tick + 1
+
 	screen:clear(Color.new(0,0,0))
 	screen:blit(0, 0, Canvas)
 	
-	--screen:print(5, 5, "color = "..colselect, Color.new(0, 0, 0))
-	--screen:print(5, 25, "a", Color.new(0, 0, 0))
-	--screen:print(5, 45, "a", Color.new(0, 0, 0))
-	--screen:print(5, 65, "a", Color.new(0, 0, 0))
-
-	-- Time output debug (to check if i'm not delusional about the date)
-	--time = os.time()
-	--dateString = os.date("%c", time)
-	--screen:print(5, 25, dateString, Color.new(0,0,0))
-
-	if ColorPaletteTimer:time() > 0 then
-		screen:blit(480-25-15, 272-25-15, ColorPalette)
-		if ColorPaletteTimer:time() >= 750 then
-			ColorPaletteTimer:stop()
-			ColorPaletteTimer:reset()
+	if DEBUG then
+		screen:print(5, 5, "FPS: "..FPS, Color.new(0, 0, 0))
+		screen:print(5, 20, "PalX "..ColPal.X, Color.new(0, 0, 0))
+		screen:print(5, 35, "PalY "..ColPal.Y, Color.new(0, 0, 0))
+		screen:print(5, 50, "PalPos "..ColPal.Pos, Color.new(0, 0, 0))
+		screen:print(5, 65, "Brush "..Me.Cursor.BrushSize, Color.new(0, 0, 0))
+		
+	end
+	
+	screen:blit(ColPal.X-4, ColPal.Y-4, ColPalPan)
+	screen:blit(ColPal.X, ColPal.Y, ColPal.Pal)
+	if ColPal.Timer:time() > 0 then
+		-- used to display here but it stops displaying colpal once the timer is off and you see no animation, fix later, add some timer space for StartAnimation()
+		if ColPal.Timer:time() >= 750 then
+			ColPal.Timer:stop()
+			ColPal.Timer:reset()
+			StartAnimation(ColPal, "Ease In-Out", 350, ColPal.X2, ColPal.Y2)
 		end
 	end
+
+	ColPalCheckCol(Me.Cursor, ColPal)
+	UpdateAnimation(ColPal)
 	
 	if pressed.right or pressed.left then
-		ColorPaletteTimer:reset()
-		ColorPaletteTimer:start()
+		ColPal.Timer:reset()
+		ColPal.Timer:start()
+		StartAnimation(ColPal, "Ease In-Out", 350, ColPal.X1, ColPal.Y1)
 		if pressed.right then
-			if colselect < 15 then
-				colselect = colselect + 1
-			else
-				colselect = 1
-			end
+			if colselect < 15 then colselect = colselect + 1 else colselect = 1 end
+		elseif pressed.left then
+			if colselect > 1 then colselect = colselect - 1 else colselect = 15 end
 		end
-		if pressed.left then
-			if colselect > 1 then
-				colselect = colselect - 1
-			else
-				colselect = 15
-			end
-		end
-		CurSetColor(Cursor, colselect)
-		ColorPalette:fillRect(0, 0, 25, 25, Cursor.Color.Main)
+		CurSetColor(Me.Cursor, colselect)
+		ColPal.Pal:fillRect(0, 0, 25, 25, Me.Cursor.Color.Main)
 	end
 
+	if pressed.up then
+		if Me.Cursor.BrushSize < 7 then Me.Cursor.BrushSize = Me.Cursor.BrushSize + 1 else Me.Cursor.BrushSize = 1 end
+	elseif pressed.down then
+		if Me.Cursor.BrushSize > 1 then Me.Cursor.BrushSize = Me.Cursor.BrushSize - 1 else Me.Cursor.BrushSize = 7 end
+	end
 	
-
-	screen:blit(Cursor.X, Cursor.Y, Cursor.img)
+	Me.Cursor:Init(Canvas, Me.Cursor.Color.Main)
+	
 	if pad:select() then
-		Canvas:save("Workspace/"..getDateStr_YYYY_MM_DD().."_"..getTimeStr_HH_MM_SS()..".png")
-	end
-
-	
-
-	dx = pad:analogX()
-	if math.abs(dx) > 32 then
-		if Cursor.X > 480 then Cursor.X = 480 elseif Cursor.X < 0 then Cursor.X = 0
+		if DEBUG then
+			screen:save("Workspace/"..CONST.CurDateFULLPLAIN.."_"..getTimeStr_HH_MM_SS()..".png")
 		else
-			Cursor.X = Cursor.X + dx / Cursor.SPD
+			Canvas:save("Workspace/"..CONST.CurDateFULLPLAIN.."_"..getTimeStr_HH_MM_SS()..".png")
 		end
-	end
-	dy = pad:analogY()
-	if math.abs(dy) > 32 then
-		if Cursor.Y > 272 then Cursor.Y = 272 elseif Cursor.Y < 0 then Cursor.Y = 0
-		else
-			Cursor.Y = Cursor.Y + dy / Cursor.SPD
-		end
-	end
-
-	if pad:l() then
-		Draw(Cursor, Color.new(255, 255, 255))
-		-- you thought it was an eraser? and it was just painting white :pensive:
-	elseif pad:r() then
-		Draw(Cursor, Cursor.Color.Main)
 	end
 	
 	if pad:start() then exit = true end
 	if exit then break end
+	if pressed.triangle and DEBUG then DEBUG = false elseif pressed.triangle and DEBUG == false then DEBUG = true end
 	-- sometimes you just don't question
 
 	screen.flip()
