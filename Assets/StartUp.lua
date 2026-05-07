@@ -1,11 +1,11 @@
 --[[
 
-	StartUp File for Espressa Lite PSP a0.2
+	StartUp Script
 	----------------------------------
 	Starts everything to set up the enviroment and etc.
 	
 	Create Date: 2020.06.07
-	Last Edit: 2026.03.30
+	Last Edit: 2026.05.01
 
 --]]
 

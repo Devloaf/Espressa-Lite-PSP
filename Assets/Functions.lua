@@ -1,25 +1,25 @@
 --[[
 
-	Function File for Espressa Lite PSP a0.2
+	Useful Functions and Variables
 	----------------------------------
 	Loads useful functions and global variables
 	
 	Create Date: 2024.02.20
-	Last Edit: 2026.03.30
+	Last Edit: 2026.05.07
 
 --]]
 
 CONST = {
 	AppName = "Espressa Lite for PSP",
-	Version = "0.2", State = "Alpha", Build = nil,
+	Version = "0.3", State = "Alpha", Build = nil,
 	Date = {
 		Year = 2026,
-		Month = 3,
-		Day = 30,
+		Month = 5,
+		Day = 7,
 		FULL = nil, -- for YYYY.MM.DD
         FULLPLAIN = nil -- for YYYYMMDD
 	},
-    CurDateFULLPLAIN = "20260330", -- for using in taking saves (you're free to modify this value the way you want but i know you won't because it's too much effort)
+    CurDateFULLPLAIN = "20260507", -- for using in taking saves (you're free to modify this value the way you want but i know you won't because it's too much effort)
 	Author = "c4thead",
 	
 	ScreenshotsDir = "Screenshots",
@@ -52,6 +52,90 @@ CONST.Date.FULLPLAIN = CONST.Date.Year
 if CONST.Date.Month < 10 then CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN.."0"..CONST.Date.Month else CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN..CONST.Date.Month end
 if CONST.Date.Day < 10 then CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN.."0"..CONST.Date.Day else CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN..CONST.Date.Day end
 
+function Bool(boolean) if boolean then return "True" else return "False" end end
+
+function getFreeMem(In)
+	if In == "MB" then
+		return System.getFreeMemory() / 1024 / 1024
+	elseif In == "KB" then
+		return System.getFreeMemory() / 1024
+	elseif In == "Bytes" then
+		return System.getFreeMemory()
+	end 
+end
+
+function drawFilledCircle(canvs, cx, cy, r, col)
+    local x = r
+    local y = 0
+    local err = 1 - x
+
+    while x >= y do
+        -- draw horizontal spans instead of pixels
+        canvs:drawLine(cx - x, cy + y, cx + x, cy + y, col)
+        canvs:drawLine(cx - x, cy - y, cx + x, cy - y, col)
+        canvs:drawLine(cx - y, cy + x, cx + y, cy + x, col)
+        canvs:drawLine(cx - y, cy - x, cx + y, cy - x, col)
+
+        y = y + 1
+
+        if err < 0 then
+            err = err + 2 * y + 1
+        else
+            x = x - 1
+            err = err + 2 * (y - x + 1)
+        end
+    end
+end
+
+function drawCircleOutline(canvs, cx, cy, r, col)
+    local x = r
+    local y = 0
+    local err = 1 - x
+
+    while x >= y do
+        canvs:drawLine(cx + x, cy + y, cx + x, cy + y, col)
+        canvs:drawLine(cx + y, cy + x, cx + y, cy + x, col)
+        canvs:drawLine(cx - y, cy + x, cx - y, cy + x, col)
+        canvs:drawLine(cx - x, cy + y, cx - x, cy + y, col)
+        canvs:drawLine(cx - x, cy - y, cx - x, cy - y, col)
+        canvs:drawLine(cx - y, cy - x, cx - y, cy - x, col)
+        canvs:drawLine(cx + y, cy - x, cx + y, cy - x, col)
+        canvs:drawLine(cx + x, cy - y, cx + x, cy - y, col)
+
+        y = y + 1
+
+        if err < 0 then
+            err = err + 2 * y + 1
+        else
+            x = x - 1
+            err = err + 2 * (y - x + 1)
+        end
+    end
+end
+
+
+function drawFilledSquare(canvs, cx, cy, size, col)
+    local half = math.floor(size / 2)
+    canvs:fillRect(cx - half, cy - half, size, size, col)
+end
+
+function drawSquareOutline(canvs, cx, cy, size, col)
+    local half = math.floor(size / 2)
+
+    local x1 = cx - half
+    local y1 = cy - half
+    local x2 = x1 + size - 1
+    local y2 = y1 + size - 1
+
+    -- top
+    canvs:drawLine(x1, y1, x2, y1, col)
+    -- bottom
+    canvs:drawLine(x1, y2, x2, y2, col)
+    -- left
+    canvs:drawLine(x1, y1, x1, y2, col)
+    -- right
+    canvs:drawLine(x2, y1, x2, y2, col)
+end
 
 
 -- totally not generated through ChatGPT 5 because i am a shit of a programmer but hey it works
