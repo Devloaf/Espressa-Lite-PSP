@@ -1,4 +1,4 @@
-Espressa Lite for PSP a0.3 by c4thead
+Espressa Lite for PSP a0.4 by c4thead
 Based on LuaPlayer 0.20
 
 An app for drawing and simple image editing for PSP made by the Devloaf team (well, by c4thead specifically)
@@ -7,6 +7,16 @@ GitHub Page: https://github.com/Devloaf/Espressa-Lite-PSP
 c4tloaf Discord: https://discord.gg/HeeGCsG63K (link might be dead)
 c4thead YouTube: https://www.youtube.com/@c4thead
 Donate me here: https://boosty.to/c4thead
+
+----------------------------------------------
+| Espressa Lite for PSP Alpha 0.4 (build 156)
+| [2026.06.03]
+----------------------------------------------
+	- Added an ability to change canvas size (if you change it, get ready for the low framerate)
+	- Now [ [] ] changes the brush - square/circle instead of [ [] ] for square and [ () ] for circle
+	- Added an ability while in PixelMove mode you can now move with D-pad (To change colors and thickness, hold [ () ] button and then press the appropriate buttons)
+	- Changed cursor appearance, now it's more clearer with dotted line, no more pencil icons
+	- Misc: New functions - drawDottedPixel(), drawCircleOutlineDotted(), drawSquareOutlineDotted(), drawDottedLine()
 
 ----------------------------------------------
 | Espressa Lite for PSP Alpha 0.3 (build 128) Rostov Edition
