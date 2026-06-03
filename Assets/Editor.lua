@@ -6,7 +6,7 @@
 	Main Script, provides drawing state.
 	
 	Create Date: 2020.06.07
-	Last Edit: 2026.05.01
+	Last Edit: 2026.05.23
 
 --]]
 
@@ -18,24 +18,34 @@ exit = false
 
 dofile("Classes/CursorClass.lua")
 dofile("Classes/PaletteClass.lua")
-
-function CurSetColor(cur, sel)
-	cur.Color.Main = Me.Palette.CurPal[1][sel].c
-end
+dofile("Classes/CanvasClass.lua")
 
 Me = {
 	Cursor = CreateCursor:new(),
-	Palette = CreatePalette:new()
+	Palette = CreatePalette:new(),
+	Canvas = CreateCanvas:new()
 }
 
 Me.Cursor:SetDefault()
 Me.Palette:SetDefault()
+Me.Canvas:SetDefault()
+Me.Canvas.W = CanvasWidth
+Me.Canvas.H = CanvasHeight
+Me.Canvas.Layer[1] = Image.createEmpty(Me.Canvas.W, Me.Canvas.H)
+Me.Canvas.Layer[1]:fillRect(0, 0, CanvasWidth, CanvasHeight, Color.new(255, 255, 255))
+Me.Canvas:SetTransparentLayerDefaults()
 
-Canvas = Image.createEmpty(SYSTEM.SCREEN_WIDTH, SYSTEM.SCREEN_HEIGHT)
-Canvas:fillRect(0, 0, SYSTEM.SCREEN_WIDTH, SYSTEM.SCREEN_HEIGHT, Color.new(255, 255, 255))
+-- colselect = 1
+Me.Cursor.Color.Main = Me.Palette.CurPal[1][Me.Cursor.Color.SelX].c
 
-colselect = 1
-CurSetColor(Me.Cursor, colselect)
+maxcolors = 0
+for i, v in pairs(Me.Palette.CurPal[1] or {}) do
+	if type(i) == "number" and type(v) == "table" and v.c ~= nil then
+		if i > maxcolors then
+			maxcolors = i
+		end
+	end
+end
 
 DEBUG = false
 FPS = 0
@@ -54,17 +64,20 @@ while true do
 	Tick = Tick + 1
 
 	screen:clear(Color.new(0,0,0))
-	screen:blit(0, 0, Canvas)
+	if Me.Canvas.BlitTransparent then
+		screen:blit(0, 0, Me.Canvas.TransparentLayer)
+	end
+	Me.Canvas:InitDraw()
 	
 	if DEBUG then
 		screen:print(5, 5, "b"..CONST.Build.." FPS: "..FPS, Color.new(0, 0, 0))
-		screen:print(5, 20, "Col: "..colselect..", Size: "..Me.Cursor.BrushSize..", SPD: "..Me.Cursor.SPD, Color.new(0, 0, 0))
-		screen:print(5, 35, "Mov: "..Bool(Me.Cursor.Moving)..", PxlMov: "..Bool(Me.Cursor.PixelMoved), Color.new(0, 0, 0))
-		--screen:print(5, 50, "Pal X: "..Me.Palette.X..", Y: "..Me.Palette.Y, Color.new(0, 0, 0))
+		screen:print(5, 20, "Size: "..Me.Cursor.BrushSize..", SPD: "..Me.Cursor.SPD, Color.new(0, 0, 0))
+		--screen:print(5, 35, "", Color.new(0, 0, 0))
+		--screen:print(5, 50, "CanW: "..Me.Canvas.W.." CanH: "..Me.Canvas.H, Color.new(0, 0, 0))
 		--screen:print(5, 65, " ", Color.new(0, 0, 0))
 	end
 	
-	Me.Palette:InitDraw(colselect)
+	Me.Palette:InitDraw(Me.Cursor.Color.SelX)
 	if Me.Palette.Timer:time() > 0 then
 		-- used to display here but it stops displaying colpal once the timer is off and you see no animation, fix later, add some timer space for StartAnimation()
 		if Me.Palette.Timer:time() >= 750 then
@@ -76,31 +89,32 @@ while true do
 
 	UpdateAnimation(Me.Palette)
 	
-	if pressed.right or pressed.left then
-		Me.Palette.Timer:reset()
-		Me.Palette.Timer:start()
-		StartAnimation(Me.Palette, "Ease Out", 350, Me.Palette.X1, Me.Palette.Y1)
-		if pressed.right then
-			if colselect < 18 then colselect = colselect + 1 else colselect = 1 end
-		elseif pressed.left then
-			if colselect > 1 then colselect = colselect - 1 else colselect = 18 end
-		end
-		CurSetColor(Me.Cursor, colselect)
+	if Me.Cursor.SPD == "PixelMove" and pad:circle() then
+		screen:blit(464, 0, Me.Cursor.img_Unlocker)
 	end
 
-	if pressed.up then
-		if Me.Cursor.BrushSize < 50 then Me.Cursor.BrushSize = Me.Cursor.BrushSize + 1 else Me.Cursor.BrushSize = 1 end
-	elseif pressed.down then
-		if Me.Cursor.BrushSize > 1 then Me.Cursor.BrushSize = Me.Cursor.BrushSize - 1 else Me.Cursor.BrushSize = 50 end
+	-- Changing color Quick
+	if Me.Cursor.SPD ~= "PixelMove" or Me.Cursor.SPD == "PixelMove" and pad:circle() then
+		if pressed.right or pressed.left then
+			Me.Palette.Timer:reset()
+			Me.Palette.Timer:start()
+			StartAnimation(Me.Palette, "Ease Out", 350, Me.Palette.X1, Me.Palette.Y1)
+			if pressed.right then
+				if Me.Cursor.Color.SelX < maxcolors then Me.Cursor.Color.SelX = Me.Cursor.Color.SelX + 1 else Me.Cursor.Color.SelX = 1 end
+			elseif pressed.left then
+				if Me.Cursor.Color.SelX > 1 then Me.Cursor.Color.SelX = Me.Cursor.Color.SelX - 1 else Me.Cursor.Color.SelX = maxcolors end
+			end
+			Me.Cursor.Color.Main = Me.Palette.CurPal[1][Me.Cursor.Color.SelX].c
+		end
 	end
 	
-	Me.Cursor:Init(Canvas, Me.Cursor.Color.Main)
+	Me.Cursor:Init(Me.Canvas.Layer[1], Me.Cursor.Color.Main)
 	
 	if pad:select() then
 		if DEBUG then
 			screen:save("Workspace/"..CONST.CurDateFULLPLAIN.."_"..getTimeStr_HH_MM_SS()..".png")
 		else
-			Canvas:save("Workspace/"..CONST.CurDateFULLPLAIN.."_"..getTimeStr_HH_MM_SS()..".png")
+			Me.Canvas.Layer[1]:save("Workspace/"..CONST.CurDateFULLPLAIN.."_"..getTimeStr_HH_MM_SS()..".png")
 		end
 	end
 	

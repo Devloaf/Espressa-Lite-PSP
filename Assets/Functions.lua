@@ -5,21 +5,21 @@
 	Loads useful functions and global variables
 	
 	Create Date: 2024.02.20
-	Last Edit: 2026.05.07
+	Last Edit: 2026.06.03
 
 --]]
 
 CONST = {
 	AppName = "Espressa Lite for PSP",
-	Version = "0.3", State = "Alpha", Build = nil,
+	Version = "0.4", State = "Alpha", Build = nil,
 	Date = {
 		Year = 2026,
-		Month = 5,
-		Day = 7,
+		Month = 6,
+		Day = 3,
 		FULL = nil, -- for YYYY.MM.DD
         FULLPLAIN = nil -- for YYYYMMDD
 	},
-    CurDateFULLPLAIN = "20260507", -- for using in taking saves (you're free to modify this value the way you want but i know you won't because it's too much effort)
+    CurDateFULLPLAIN = "20260603", -- for using in taking saves (you're free to modify this value the way you want but i know you won't because it's too much effort)
 	Author = "c4thead",
 	
 	ScreenshotsDir = "Screenshots",
@@ -54,6 +54,8 @@ if CONST.Date.Day < 10 then CONST.Date.FULLPLAIN = CONST.Date.FULLPLAIN.."0"..CO
 
 function Bool(boolean) if boolean then return "True" else return "False" end end
 
+
+
 function getFreeMem(In)
 	if In == "MB" then
 		return System.getFreeMemory() / 1024 / 1024
@@ -62,6 +64,12 @@ function getFreeMem(In)
 	elseif In == "Bytes" then
 		return System.getFreeMemory()
 	end 
+end
+
+function drawDottedPixel(canvs, x, y, col, step)
+    if step % 2 == 0 then
+        canvs:drawLine(x, y, x, y, col)
+    end
 end
 
 function drawFilledCircle(canvs, cx, cy, r, col)
@@ -113,6 +121,34 @@ function drawCircleOutline(canvs, cx, cy, r, col)
     end
 end
 
+function drawCircleOutlineDotted(canvs, cx, cy, r, col)
+    local x = r
+    local y = 0
+    local err = 1 - x
+    local step = 0
+
+    while x >= y do
+        drawDottedPixel(canvs, cx + x, cy + y, col, step)
+        drawDottedPixel(canvs, cx + y, cy + x, col, step)
+        drawDottedPixel(canvs, cx - y, cy + x, col, step)
+        drawDottedPixel(canvs, cx - x, cy + y, col, step)
+        drawDottedPixel(canvs, cx - x, cy - y, col, step)
+        drawDottedPixel(canvs, cx - y, cy - x, col, step)
+        drawDottedPixel(canvs, cx + y, cy - x, col, step)
+        drawDottedPixel(canvs, cx + x, cy - y, col, step)
+
+        y = y + 1
+        step = step + 1
+
+        if err < 0 then
+            err = err + 2 * y + 1
+        else
+            x = x - 1
+            err = err + 2 * (y - x + 1)
+        end
+    end
+end
+
 
 function drawFilledSquare(canvs, cx, cy, size, col)
     local half = math.floor(size / 2)
@@ -137,6 +173,55 @@ function drawSquareOutline(canvs, cx, cy, size, col)
     canvs:drawLine(x2, y1, x2, y2, col)
 end
 
+function drawSquareOutlineDotted(canvs, cx, cy, size, col)
+    local half = math.floor(size / 2)
+
+    local x1 = cx - half
+    local y1 = cy - half
+    local x2 = x1 + size - 1
+    local y2 = y1 + size - 1
+
+    -- top
+    drawDottedLine(canvs, x1, y1, x2, y1, col)
+
+    -- bottom
+    drawDottedLine(canvs, x1, y2, x2, y2, col)
+
+    -- left
+    drawDottedLine(canvs, x1, y1, x1, y2, col)
+
+    -- right
+    drawDottedLine(canvs, x2, y1, x2, y2, col)
+end
+
+function drawDottedLine(canvs, x1, y1, x2, y2, col)
+    local dx = x2 - x1
+    local dy = y2 - y1
+
+    local steps
+
+    if math.abs(dx) > math.abs(dy) then
+        steps = math.abs(dx)
+    else
+        steps = math.abs(dy)
+    end
+
+    local xInc = dx / steps
+    local yInc = dy / steps
+
+    local x = x1
+    local y = y1
+
+    for i = 0, steps do
+        if i % 2 == 0 then
+            canvs:drawLine(math.floor(x), math.floor(y),
+                           math.floor(x), math.floor(y), col)
+        end
+
+        x = x + xInc
+        y = y + yInc
+    end
+end
 
 -- totally not generated through ChatGPT 5 because i am a shit of a programmer but hey it works
 function StartAnimation(obj, anim, dur, destX, destY, startAlpha, endAlpha)
