@@ -4,6 +4,25 @@
 ## What is it?
 Espressa Lite is an app for those who wants to draw something on PlayStationPortable (PSP) or wants to edit some lightweight stuff on a go!
 
+## Controls (a0.4)
+### Menu:
+  * [Cross] Starts editing
+  * [Select] Take screenshot
+  * [Left/Right] Change Canvas Width
+  * [Up/Down] Change Canvas Height
+### Editing:
+  * [D-Pad] Move Cursor
+  * [Left/Right] Switch Color
+  * [Up/Down] Change Brush Size
+  * [Square] Change Brush to Square or Circle
+  * [Circle] While in PixelMove mode: Allow to change brush size and color
+  * [Cross] Change Sensitivity of Cursor
+  * [Triangle] Enable DEBUG mode
+  * [L] Draw White (Eraser)
+  * [R] Draw Selected Color
+  * [Select] Save Canvas or Take Screenshot while DEBUG mode
+  * [Start] Go to Menu
+
 ## Controls (a0.3)
 ### Menu:
   * [Cross] Starts editing
