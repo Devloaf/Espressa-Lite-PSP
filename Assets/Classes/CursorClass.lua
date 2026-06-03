@@ -13,7 +13,10 @@ CreateCursor = {
                 Main = nil,
                 R = nil,
                 G = nil,
-                B = nil
+                B = nil,
+
+                SelX = nil,
+                SelY = nil
             },
             W = nil,
             H = nil,
@@ -23,6 +26,7 @@ CreateCursor = {
             AnalogHeldX = nil,
             AnalogHeldY = nil,
             PixelMoved = nil,
+            img_Unlocker = nil,
 
 
             
@@ -34,6 +38,7 @@ CreateCursor = {
                     Filling = Image.load("Resources/ToolPack/"..Config.ToolPack.."/Fill.png")
                 }
                 self.img = self.Cursors.Pencil
+                self.img_Unlocker = Image.load("Resources/ToolPack/"..Config.ToolPack.."/Icon/Unlocker.png")
                 self.X = 220
                 self.Y = 150
                 self.W = self.img:width()
@@ -44,6 +49,8 @@ CreateCursor = {
                 self.Color.R = 0
                 self.Color.G = 0
                 self.Color.B = 0
+                self.Color.SelX = 1
+                self.Color.SelY = 1
                 self.SPD = 64 -- 64 - 96 - 128
                 self.BrushSize = 7
                 self.Type = "Circle"
@@ -55,14 +62,18 @@ CreateCursor = {
 
 
             Draw = function(self, canvs, col)
-                local cx = self.X + self.Hotspot.X
-                local cy = self.Y + self.Hotspot.Y
+                --local cx = self.X + self.Hotspot.X
+                --local cy = self.Y + self.Hotspot.Y
+                local cx = self.X
+                local cy = self.Y
                 if self.Type == "Circle" then
-                    drawCircleOutline(screen, cx, cy, self.BrushSize, col)
-                    drawCircleOutline(screen, cx, cy, self.BrushSize+1, Color.new(0, 0, 0))
+                    drawCircleOutlineDotted(screen, cx, cy, self.BrushSize, Color.new(0, 0, 0))
+                    --drawCircleOutline(screen, cx, cy, self.BrushSize, col)
+                    --drawCircleOutline(screen, cx, cy, self.BrushSize+1, Color.new(0, 0, 0))
                 elseif self.Type == "Square" then
-                    drawSquareOutline(screen, cx, cy, self.BrushSize, col)
-                    drawSquareOutline(screen, cx, cy, self.BrushSize+2, Color.new(0, 0, 0))
+                    drawSquareOutlineDotted(screen, cx, cy, self.BrushSize, Color.new(0, 0, 0))
+                    --drawSquareOutline(screen, cx, cy, self.BrushSize, col)
+                    --drawSquareOutline(screen, cx, cy, self.BrushSize+2, Color.new(0, 0, 0))
                 end
 
 
@@ -93,15 +104,25 @@ CreateCursor = {
 
 
             Init = function(self, canvs, col)
-                screen:blit(self.X, self.Y, self.img)
+                --screen:blit(self.X, self.Y, self.img)
+                
+                if pad:l() or pad:r() then
+                    screen:drawLine(self.X, self.Y, self.X, self.Y, Color.new(0, 0, 0))
+                else
+                    screen:drawLine(self.X-2, self.Y, self.X+2, self.Y, Color.new(0, 0, 0))
+                    screen:drawLine(self.X, self.Y-2, self.X, self.Y+2, Color.new(0, 0, 0))
+                end
                 
                 self.Draw(self, canvs, col)
 
-                if pad:square() then
-                    self.Type = "Square"
-                elseif pad:circle() then
-                    self.Type = "Circle"
+                if pressed.square then
+                    if self.Type == "Square" then
+                        self.Type = "Circle"
+                    elseif self.Type == "Circle" then
+                        self.Type = "Square"
+                    end
                 end
+
 
                 if pressed.cross then
                     if self.SPD == 64 then
@@ -142,6 +163,11 @@ CreateCursor = {
                     else
                         self.AnalogHeldX = false
                     end
+                    
+                    if self.SPD == "PixelMove" and not pad:circle() then
+                        if pressed.right then self.X = self.X + 1 end
+                        if pressed.left then self.X = self.X - 1 end
+                    end
 
                     -- Y AXIS
                     if math.abs(dy) > threshold then
@@ -155,6 +181,11 @@ CreateCursor = {
                         end
                     else
                         self.AnalogHeldY = false
+                    end
+
+                    if self.SPD == "PixelMove" and not pad:circle() then
+                        if pressed.down then self.Y = self.Y + 1 end
+                        if pressed.up then self.Y = self.Y - 1 end
                     end
 
                 -- =====================
@@ -179,6 +210,15 @@ CreateCursor = {
 
                 if self.Y > SYSTEM.SCREEN_HEIGHT then self.Y = SYSTEM.SCREEN_HEIGHT end
                 if self.Y < 0 then self.Y = 0 end
+
+                if Me.Cursor.SPD ~= "PixelMove" or Me.Cursor.SPD == "PixelMove" and pad:circle() then
+                    if pressed.up then
+                        if self.BrushSize < 50 then self.BrushSize = self.BrushSize + 1 else self.BrushSize = 1 end
+                    elseif pressed.down then
+                        if self.BrushSize > 1 then self.BrushSize = self.BrushSize - 1 else self.BrushSize = 50 end
+                    end
+                end
+
             end,
 
         }
